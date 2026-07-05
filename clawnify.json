@@ -1,0 +1,25 @@
+{
+  "$schema": "https://app.clawnify.com/schema/v1/clawnify.json",
+  "name": "Open SEO",
+  "description": "AI SEO content engine for WordPress. Plan topical clusters, generate people-first articles, and auto-publish them to your site on a schedule. An open alternative to Surfer and Frase.",
+  "icon": "icon.svg",
+  "template": {
+    "displayName": "SEO",
+    "category": "Marketing"
+  },
+  "app": {
+    "framework": "preact+hono",
+    "database": true,
+    "storage": false,
+    "credentials": ["wordpress"]
+  },
+  "env": {
+    "oneOf": [["OPENROUTER_API_KEY"]],
+    "optional": ["SEO_MODEL"]
+  },
+  "api": {
+    "public_routes": [
+      { "path": "/api/internal/publish", "methods": ["POST"] }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@clawnify/open-seo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler d1 execute open-seo-db --local --file=src/server/schema.sql && concurrently -n ui,api -c cyan,green \"vite\" \"wrangler dev --port 8787\"",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@clawnify/db": "^0.2.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "hono": "^4.6.0",
+    "lucide-preact": "^0.575.0",
+    "preact": "^10.25.0",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.0",
+    "concurrently": "^9.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "wrangler": "^4.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ],
+    "overrides": {
+      "react": "npm:@preact/compat@^10.25.0",
+      "react-dom": "npm:@preact/compat@^10.25.0"
+    }
+  }
+}

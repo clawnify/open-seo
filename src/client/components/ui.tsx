@@ -71,3 +71,25 @@ export function fromLocalInput(v: string): string | null {
   const d = new Date(v);
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
+
+/** KPI value + label + fixed-height meta line (so state toggles don't shift layout). */
+export function StatTile({ value, label, meta }: { value: number | string; label: string; meta?: string }) {
+  return (
+    <div>
+      <div class="tnum text-[24px] font-bold leading-none">{value}</div>
+      <div class="mt-1 text-[11px] text-muted">{label}</div>
+      <div class="mt-0.5 h-3.5 text-[11px] text-faint">{meta ?? ""}</div>
+    </div>
+  );
+}
+
+/** Designed empty state for a stage/section not yet wired (honest about Phase 2). */
+export function Phase2Empty({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div class="flex flex-col items-center justify-center gap-2.5 py-16 text-center">
+      <span class="badge badge-neutral">Phase 2</span>
+      <p class="text-[15px] font-semibold">{title}</p>
+      <p class="max-w-md text-[13px] text-muted">{hint}</p>
+    </div>
+  );
+}

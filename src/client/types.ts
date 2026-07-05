@@ -1,6 +1,6 @@
 export type PostStatus = "draft" | "scheduled" | "published" | "failed";
 
-export type View = "dashboard" | "pipeline" | "calendar" | "plans" | "compose";
+export type View = "research" | "produce" | "publish" | "measure" | "optimize" | "compose";
 
 export interface Plan {
   id: number;

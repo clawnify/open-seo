@@ -66,14 +66,14 @@ export function Composer({ editId, navigate }: { editId: number | null; navigate
     const p = await createPost(payload); return p?.id ?? null;
   };
 
-  const save = async () => { setSaving(true); const id = await persist(); setSaving(false); if (id) navigate("/pipeline"); };
+  const save = async () => { setSaving(true); const id = await persist(); setSaving(false); if (id) navigate("/produce"); };
 
   const publishNow = async () => {
     setPublishing(true);
     const id = await persist();
     if (id) await publishPost(id);
     setPublishing(false);
-    if (id) navigate("/pipeline");
+    if (id) navigate("/produce");
   };
 
   const hasContent = form.content_html.trim().length > 0;
@@ -82,7 +82,7 @@ export function Composer({ editId, navigate }: { editId: number | null; navigate
   return (
     <>
       <Toolbar title={existing ? "Edit article" : "New article"}>
-        <button class="btn btn-ghost btn-sm" onClick={() => navigate("/pipeline")}><ArrowLeft size={14} /> Back</button>
+        <button class="btn btn-ghost btn-sm" onClick={() => navigate("/produce")}><ArrowLeft size={14} /> Back</button>
         {existing && <StatusBadge status={existing.status} />}
       </Toolbar>
 

@@ -6,17 +6,23 @@ interface RouterState {
   editId: number | null;
 }
 
+const STAGE_PATHS: Record<string, View> = {
+  "/research": "research",
+  "/produce": "produce",
+  "/publish": "publish",
+  "/measure": "measure",
+  "/optimize": "optimize",
+};
+
 function parseLocation(): RouterState {
   const path = window.location.pathname;
-  if (path === "/pipeline") return { view: "pipeline", editId: null };
-  if (path === "/calendar") return { view: "calendar", editId: null };
-  if (path === "/plans") return { view: "plans", editId: null };
+  if (STAGE_PATHS[path]) return { view: STAGE_PATHS[path], editId: null };
   if (path === "/compose") return { view: "compose", editId: null };
   if (path.startsWith("/compose/")) {
     const id = Number(path.split("/")[2]);
     return { view: "compose", editId: isNaN(id) ? null : id };
   }
-  return { view: "dashboard", editId: null };
+  return { view: "produce", editId: null };
 }
 
 export function useRouter() {

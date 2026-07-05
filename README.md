@@ -1,3 +1,5 @@
+<img src="readme-banner.png" alt="Open SEO preview" />
+
 # Open SEO: The Open-Source Surfer & Frase Alternative
 
 [![Deploy with Clawnify](https://app.clawnify.com/deploy-button.svg)](https://app.clawnify.com/deploy?repo=clawnify/open-seo)

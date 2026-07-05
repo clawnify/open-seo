@@ -97,6 +97,29 @@ label.field > span { @apply block mb-1 text-[12px] font-semibold tracking-[0.04e
 .badge-warning { @apply bg-warning-tint text-warning; }
 .badge-danger  { @apply bg-danger-tint text-danger; }
 
+/* Sidebar nav item (DESIGN-APPS: muted at rest, sunken fill + ink text active) */
+.side-item {
+  @apply flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted
+         transition-colors hover:bg-surface-sunken hover:text-foreground;
+}
+.side-item-active { @apply bg-surface-sunken font-semibold text-foreground; }
+.stage-step {
+  @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border
+         text-[11px] font-semibold;
+  font-variant-numeric: tabular-nums;
+}
+.side-item-active .stage-step { @apply border-foreground text-foreground; }
+
+/* Data table (DESIGN-APPS: sunken header, hairline rows, tabular right-aligned) */
+.tbl { @apply w-full text-[13px]; border-collapse: collapse; }
+.tbl thead th {
+  @apply bg-surface-sunken px-3 py-2.5 text-left text-[12px] font-semibold tracking-[0.04em] text-muted;
+}
+.tbl tbody td { @apply border-t border-border px-3 py-2.5 align-middle; }
+.tbl tbody tr:hover { @apply bg-surface-sunken; }
+.tbl .num { @apply text-right; font-variant-numeric: tabular-nums; }
+.tbl tfoot td { @apply border-t border-border px-3 py-2.5 text-[12px] font-semibold text-muted; }
+
 /* Agent mode — larger tap targets (data-agent set on <html>). */
 :root[data-agent] .btn { @apply h-10; }
 :root[data-agent] .input { @apply py-2.5; }

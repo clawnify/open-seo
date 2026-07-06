@@ -30,6 +30,11 @@ CREATE TABLE IF NOT EXISTS posts (
   wp_post_id INTEGER,
   published_url TEXT,
   error TEXT,
+  -- Measure: latest live Google position of the connected site for this
+  -- article's keyword (1-10 = page 1; NULL after a check = not in top 10).
+  -- rank_checked_at NULL = never checked; non-NULL = last live SerpAPI lookup.
+  rank INTEGER,
+  rank_checked_at TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

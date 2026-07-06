@@ -24,9 +24,12 @@ Think of it as an open-source alternative to **Surfer** or **Frase** — a conte
 - **Pipeline** — every article grouped by status: draft → scheduled → published → failed.
 - **Calendar** — month grid of scheduled articles.
 - **Auto-publish to WordPress** — schedule an article and the Clawnify queue fires it to your site's REST API at the chosen time; publish now with one click.
-- **Dashboard** — at-a-glance pipeline stats and recent articles.
 
-> **Roadmap:** Measure/Optimize (rank tracking + AI rewrite suggestions), and real search-volume/difficulty numbers via DataForSEO to enrich the AI-classified difficulty bands.
+**Measure**
+- **Pipeline stats + publishing cadence** — at-a-glance counts and a 30-day activity chart.
+- **Keyword rankings** — check where your connected site currently ranks on Google for each published article's keyword, from **live SerpAPI results**. Positions are stored per article (top-3 / page-1 badges, best position, last checked) and refreshed on demand in bounded batches.
+
+> **Roadmap:** Optimize (AI rewrite suggestions over search performance); Google Search Console clicks/impressions/CTR; and real search-volume/difficulty numbers via DataForSEO to enrich the AI-classified difficulty bands.
 
 ## How publishing works
 
@@ -39,6 +42,8 @@ Scheduling is owned by the **Clawnify managed queue** (`services.clawnify.com/qu
 Live search data comes from the **SerpAPI integration you connect in Clawnify → Integrations** — the app never holds an API key. `clawnify.json` declares `credentials: ["serpapi"]`, so the builder wires the credentials broker into the app; `src/server/research.ts` then pulls live Google results through the one SDK call the platform sanctions — `connect("serpapi", env).run("SERPAPI_SEARCH", …)` from [`@clawnify/connections`](https://www.npmjs.com/package/@clawnify/connections). Related searches and People-Also-Ask become keyword opportunities and content gaps; page-1 organic results become the competitor list. An AI pass then clusters and classifies intent + difficulty **over that real SERP** — grounded, not guessed.
 
 Without a SerpAPI connection (e.g. local `pnpm dev`), keyword discovery degrades to an AI-estimated expansion (`source: "ai"`, clearly labelled — never invented numbers presented as live data); competitor analysis stays live-only.
+
+The same connection powers **Measure's keyword rankings**: for each published article, `src/server/measure.ts` runs a live search for its keyword and records where your site's domain (from `WORDPRESS_SITE_URL`) sits in the page-1 results. Ranks are persisted on each post, so the dashboard reads stored positions instead of re-hitting the API on every view; checks run in bounded batches (least-recently-checked first) to respect Worker time and SerpAPI rate limits.
 
 ## Quickstart
 
@@ -85,6 +90,7 @@ src/
     index.ts        -- Hono API: research, plans, posts, generate, publish, calendar, stats
     ai.ts           -- OpenRouter: article + idea generation + keyword classification
     research.ts     -- Keyword/competitor discovery seam (SerpAPI live + AI fallback)
+    measure.ts      -- Live keyword rank tracking (reuses the SerpAPI seam)
     wordpress.ts    -- WordPress publish seam (credentials + REST)
     queue.ts        -- Clawnify managed-queue scheduling adapter
     db.ts           -- D1 adapter (@clawnify/db)
@@ -102,6 +108,7 @@ src/
 | GET | `/api/status` | WordPress + AI + live-research connection state |
 | POST | `/api/research/keywords` | Seed → keyword ideas (`source: live \| ai`) |
 | POST | `/api/research/competitors` | Seed → live ranking competitors + content gaps |
+| POST | `/api/measure/rankings/refresh` | Check + persist live Google positions (bounded batch) |
 | GET/POST/PUT/DELETE | `/api/plans[/:id]` | Content plan CRUD |
 | POST | `/api/ideas` | Article title ideas for a cluster |
 | POST | `/api/generate` | Generate a full article draft |

@@ -25,9 +25,15 @@ export interface Post {
   wp_post_id: number | null;
   published_url: string | null;
   error: string | null;
+  rank: number | null;
+  rank_checked_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export type RankingsResult =
+  | { live: false }
+  | { live: true; domain: string | null; checked: number; unchecked: number };
 
 export interface Stats {
   total: number;

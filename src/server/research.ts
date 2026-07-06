@@ -94,7 +94,7 @@ export async function researchCompetitors(
 
 // ── SerpAPI live pull (via the Clawnify connections broker) ──────────
 
-interface SerpResult {
+export interface SerpResult {
   organic: Competitor[];
   relatedTerms: string[];
   rankingDomains: string[];
@@ -103,9 +103,10 @@ interface SerpResult {
 /**
  * Run one live Google search through the connected SerpAPI integration.
  * Returns null on any failure (not connected, no broker, API error) so callers
- * degrade to the AI tier instead of surfacing an error.
+ * degrade to the AI tier instead of surfacing an error. Shared with Measure
+ * (rank tracking) so there is one SerpAPI call site.
  */
-async function serpSearch(env: ConnectionsEnv, query: string): Promise<SerpResult | null> {
+export async function serpSearch(env: ConnectionsEnv, query: string): Promise<SerpResult | null> {
   try {
     const data = await connect("serpapi", env).run("SERPAPI_SEARCH", { query });
     const obj = coerce(data);
@@ -167,7 +168,7 @@ function num(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-function domainOf(url: string): string {
+export function domainOf(url: string): string {
   if (!url) return "";
   try {
     return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");

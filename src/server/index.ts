@@ -5,6 +5,7 @@ import { scheduleDelivery, cancelDelivery, verifyDelivery } from "./queue";
 import { generateArticle, generateIdeas, type PlanContext } from "./ai";
 import { publishArticle, wordpressConnected } from "./wordpress";
 import { researchConnected, discoverKeywords, researchCompetitors } from "./research";
+import { refreshRankings } from "./measure";
 
 type Env = {
   Bindings: {
@@ -131,6 +132,18 @@ app.post("/api/research/competitors", async (c) => {
     return c.json(await researchCompetitors(c.env, { seed: seed.trim() }));
   } catch (e: any) {
     return c.json({ error: e.message || "Competitor research failed" }, 502);
+  }
+});
+
+// ── Measure: live keyword rank tracking ──
+
+// Check a bounded batch of published articles' live Google positions and
+// persist them on the posts. Live-only ({ live:false } without SerpAPI).
+app.post("/api/measure/rankings/refresh", async (c) => {
+  try {
+    return c.json(await refreshRankings(c.env));
+  } catch (e: any) {
+    return c.json({ error: e.message || "Rank check failed" }, 502);
   }
 });
 

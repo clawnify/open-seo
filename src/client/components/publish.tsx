@@ -1,7 +1,7 @@
 import { useState, useEffect } from "preact/hooks";
 import { ChevronLeft, ChevronRight, CalendarClock, Send, ExternalLink, Loader2 } from "lucide-preact";
 import { useApp } from "../context";
-import { Eyebrow, EmptyState, formatDateTime, fromLocalInput } from "./ui";
+import { Eyebrow, EmptyState, formatDateTime, fromLocalInput, Page } from "./ui";
 import type { Post } from "../types";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -48,12 +48,7 @@ export function Publish({ navigate }: { navigate: (p: string) => void }) {
   const monthLabel = new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   return (
-    <div class="mx-auto max-w-[1100px] space-y-4 p-6">
-      <div>
-        <h1 class="text-[20px] font-bold tracking-tight">Publish</h1>
-        <p class="mt-0.5 text-[13px] text-muted">Schedule drafts and let them go live on WordPress automatically — on time, every time.</p>
-      </div>
-
+    <Page title="Publish">
       {/* Schedule control */}
       <div class="card">
         <div class="card-zone">
@@ -119,7 +114,7 @@ export function Publish({ navigate }: { navigate: (p: string) => void }) {
         action={(p) => <button class="btn btn-secondary btn-sm" onClick={() => publishPost(p.id)} disabled={!wp} title={wp ? "" : "Connect WordPress"}><Send size={13} /> Publish now</button>} />
       <ArticleTable title="Published" rows={published} navigate={navigate} whenLabel="Published" whenField="published_at"
         action={(p) => p.published_url ? <a class="btn btn-ghost btn-sm px-1.5" href={p.published_url} target="_blank" rel="noreferrer" aria-label="View live"><ExternalLink size={14} /></a> : null} />
-    </div>
+    </Page>
   );
 }
 

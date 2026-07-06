@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import { Plus, Trash2, ArrowRight } from "lucide-preact";
 import { useApp } from "../context";
-import { Eyebrow, EmptyState, Phase2Empty } from "./ui";
+import { Eyebrow, EmptyState, Phase2Empty, Page } from "./ui";
 
 export function Research({ navigate }: { navigate: (p: string) => void }) {
   const { plans, createPlan, deletePlan } = useApp();
@@ -15,17 +15,11 @@ export function Research({ navigate }: { navigate: (p: string) => void }) {
   };
 
   return (
-    <div class="mx-auto max-w-[1100px] space-y-4 p-6">
-      <div class="flex items-end justify-between gap-3">
-        <div>
-          <h1 class="text-[20px] font-bold tracking-tight">Research</h1>
-          <p class="mt-0.5 text-[13px] text-muted">Group your topics into clusters, then uncover the keywords worth ranking for.</p>
-        </div>
-        <button class="btn btn-primary" onClick={() => setCreating((v) => !v)}>
-          <Plus size={15} strokeWidth={2.5} /> New plan
-        </button>
-      </div>
-
+    <Page title="Research" actions={
+      <button class="btn btn-primary" onClick={() => setCreating((v) => !v)}>
+        <Plus size={15} strokeWidth={2.5} /> New plan
+      </button>
+    }>
       {/* Content plans (live) */}
       <div class="card">
         <div class="card-zone pb-0"><Eyebrow>Content plans · {plans.length}</Eyebrow></div>
@@ -95,6 +89,6 @@ export function Research({ navigate }: { navigate: (p: string) => void }) {
           />
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

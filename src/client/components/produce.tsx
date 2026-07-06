@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import { Sparkles, FileText, Loader2, Pencil, Trash2, ArrowRight } from "lucide-preact";
 import { useApp } from "../context";
-import { Eyebrow, EmptyState, StatusBadge, formatDateTime } from "./ui";
+import { Eyebrow, EmptyState, formatDateTime, Page } from "./ui";
 
 export function Produce({ navigate }: { navigate: (p: string) => void }) {
   const { plans, posts, generateArticle, generateIdeas, deletePost } = useApp();
@@ -39,12 +39,7 @@ export function Produce({ navigate }: { navigate: (p: string) => void }) {
   };
 
   return (
-    <div class="mx-auto max-w-[1100px] space-y-4 p-6">
-      <div>
-        <h1 class="text-[20px] font-bold tracking-tight">Produce</h1>
-        <p class="mt-0.5 text-[13px] text-muted">Turn keywords and topical clusters into people-first articles.</p>
-      </div>
-
+    <Page title="Produce">
       {/* Generate a single article */}
       <div class="card">
         <div class="card-zone">
@@ -140,6 +135,6 @@ export function Produce({ navigate }: { navigate: (p: string) => void }) {
           </div>
         )}
       </div>
-    </div>
+    </Page>
   );
 }

@@ -32,6 +32,22 @@ export function Toolbar({ title, children }: { title: string; children?: preact.
   );
 }
 
+/**
+ * Standard stage layout — a full-width sticky toolbar (title + primary action)
+ * over a left-aligned, container-bounded content column (hugs the sidebar
+ * instead of floating centered). Every stage screen uses this.
+ */
+export function Page({ title, actions, children }: {
+  title: string; actions?: preact.ComponentChildren; children: preact.ComponentChildren;
+}) {
+  return (
+    <>
+      <Toolbar title={title}>{actions}</Toolbar>
+      <div class="max-w-[1200px] space-y-4 px-6 py-5">{children}</div>
+    </>
+  );
+}
+
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: preact.ComponentChildren }) {
   return (
     <div class="flex flex-col items-center justify-center gap-3 py-20 text-center">

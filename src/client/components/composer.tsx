@@ -86,7 +86,7 @@ export function Composer({ editId, navigate }: { editId: number | null; navigate
         {existing && <StatusBadge status={existing.status} />}
       </Toolbar>
 
-      <div class="mx-auto max-w-[900px] space-y-4 p-6">
+      <div class="max-w-[900px] space-y-4 px-6 py-5">
         {/* Produce — generate a fresh draft (new articles only) */}
         {!existing && (
           <div class="card">

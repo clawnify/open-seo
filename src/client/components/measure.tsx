@@ -1,5 +1,5 @@
 import { useApp } from "../context";
-import { Eyebrow, StatTile, Phase2Empty, formatDate } from "./ui";
+import { Eyebrow, StatTile, Phase2Empty, formatDate, Page } from "./ui";
 
 export function Measure(_: { navigate: (p: string) => void }) {
   const { stats, posts } = useApp();
@@ -8,12 +8,7 @@ export function Measure(_: { navigate: (p: string) => void }) {
   const publishedRate = stats && stats.total > 0 ? Math.round((stats.published / stats.total) * 100) : 0;
 
   return (
-    <div class="mx-auto max-w-[1100px] space-y-4 p-6">
-      <div>
-        <h1 class="text-[20px] font-bold tracking-tight">Measure</h1>
-        <p class="mt-0.5 text-[13px] text-muted">Track what you've produced and how it's performing.</p>
-      </div>
-
+    <Page title="Measure">
       {/* Pipeline KPIs (live) */}
       <div class="card">
         <div class="card-zone">
@@ -81,6 +76,6 @@ export function Measure(_: { navigate: (p: string) => void }) {
           />
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

@@ -1,14 +1,9 @@
 import { Check, X } from "lucide-preact";
-import { Eyebrow, Phase2Empty } from "./ui";
+import { Eyebrow, Phase2Empty, Page } from "./ui";
 
 export function Optimize(_: { navigate: (p: string) => void }) {
   return (
-    <div class="mx-auto max-w-[1100px] space-y-4 p-6">
-      <div>
-        <h1 class="text-[20px] font-bold tracking-tight">Optimize</h1>
-        <p class="mt-0.5 text-[13px] text-muted">Refine published articles from what the data says — accept the wins, prune the rest.</p>
-      </div>
-
+    <Page title="Optimize">
       <div class="card">
         <div class="card-zone pb-0"><Eyebrow>AI improvement suggestions</Eyebrow></div>
         <div class="card-zone pt-2">
@@ -37,6 +32,6 @@ export function Optimize(_: { navigate: (p: string) => void }) {
           </div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

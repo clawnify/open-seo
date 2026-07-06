@@ -11,7 +11,7 @@
     "framework": "preact+hono",
     "database": true,
     "storage": false,
-    "credentials": ["wordpress"]
+    "credentials": ["wordpress", "serpapi"]
   },
   "env": {
     "oneOf": [["OPENROUTER_API_KEY"]],

@@ -1,13 +1,18 @@
 import { Hono } from "hono";
+import type { CredentialBinding } from "@clawnify/connections";
 import { initDB, query, get, run } from "./db";
 import { scheduleDelivery, cancelDelivery, verifyDelivery } from "./queue";
 import { generateArticle, generateIdeas, type PlanContext } from "./ai";
 import { publishArticle, wordpressConnected } from "./wordpress";
+import { researchConnected, discoverKeywords, researchCompetitors } from "./research";
 
 type Env = {
   Bindings: {
     DB: D1Database;
-    // App owner's org ID (injected by the Clawnify builder).
+    // Credentials broker binding + org id — injected by the builder in
+    // production. Powers Research's live search-data pull (SerpAPI) via
+    // @clawnify/connections. Absent in local dev → Research falls back to AI.
+    CREDENTIALS?: CredentialBinding;
     CLAWNIFY_ORG_ID?: string;
     // Managed-service token (injected by the builder) — authorizes the queue
     // service that fires scheduled articles.
@@ -95,9 +100,39 @@ app.use("*", async (c, next) => {
 
 // ── Status ──
 
-app.get("/api/status", (c) =>
-  c.json({ wordpress_connected: wordpressConnected(c.env), ai: !!c.env.OPENROUTER_API_KEY }),
+app.get("/api/status", async (c) =>
+  c.json({
+    wordpress_connected: wordpressConnected(c.env),
+    ai: !!c.env.OPENROUTER_API_KEY,
+    research_live: await researchConnected(c.env),
+  }),
 );
+
+// ── Research: keyword discovery + competitor SERP ──
+
+// Seed topic → prioritized keyword ideas (live SerpAPI signals when connected,
+// AI-estimated otherwise). source tells the UI which tier answered.
+app.post("/api/research/keywords", async (c) => {
+  const { seed, audience } = await c.req.json<{ seed: string; audience?: string }>();
+  if (!seed?.trim()) return c.json({ error: "seed required" }, 400);
+  try {
+    return c.json(await discoverKeywords(c.env, { seed: seed.trim(), audience: audience?.trim() || undefined }));
+  } catch (e: any) {
+    return c.json({ error: e.message || "Keyword research failed" }, 502);
+  }
+});
+
+// Seed keyword → who currently ranks + content gaps. Live-only ({ live:false }
+// when SerpAPI isn't connected).
+app.post("/api/research/competitors", async (c) => {
+  const { seed } = await c.req.json<{ seed: string }>();
+  if (!seed?.trim()) return c.json({ error: "seed required" }, 400);
+  try {
+    return c.json(await researchCompetitors(c.env, { seed: seed.trim() }));
+  } catch (e: any) {
+    return c.json({ error: e.message || "Competitor research failed" }, 502);
+  }
+});
 
 // ── Content plans (clusters) ──
 

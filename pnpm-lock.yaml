@@ -12,6 +12,9 @@ importers:
 
   .:
     dependencies:
+      '@clawnify/connections':
+        specifier: ^0.2.2
+        version: 0.2.2
       '@clawnify/db':
         specifier: ^0.2.0
         version: 0.2.0
@@ -142,8 +145,14 @@ packages:
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
 
+  '@clawnify/connections@0.2.2':
+    resolution: {integrity: sha512-dRPVXa3oqdNuCd/GcVvoGLJGe7Zrh+k3Nx6J6Xjcmr3VoABiN6E9Mw+nEbqH7qilHGiprLhPfc/OtHJ5tpZM1Q==}
+
   '@clawnify/db@0.2.0':
     resolution: {integrity: sha512-6ADNSig+qLg24xajbDcjJXktBZSNKwfTDJhh1oH5TFKh8frVOzHirVGe06XTeMn9m5lI40jlpQ2sLo0OOl0iEA==}
+
+  '@clawnify/integrations@0.2.2':
+    resolution: {integrity: sha512-st7m8+zszpskeaj599kepIz8LSX0ASTkJThJ7gNGuOG7Ra9sn3ui+1P9kkKo8opYOXGOnLxYpAX2n8zRKkY26w==}
 
   '@cloudflare/kv-asset-handler@0.5.0':
     resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
@@ -1583,7 +1592,13 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
+  '@clawnify/connections@0.2.2':
+    dependencies:
+      '@clawnify/integrations': 0.2.2
+
   '@clawnify/db@0.2.0': {}
+
+  '@clawnify/integrations@0.2.2': {}
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 

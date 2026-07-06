@@ -21,7 +21,13 @@
  * BASIC_AUTH, credentialEnv injection IS the platform's sanctioned delivery.
  * If a self-hosted-safe runtime accessor is ever added, swapping `resolveCreds`
  * is the ONLY change here — everything downstream is already REST-only.
+ *
+ * We still read those injected vars through the SDK's `secret()` (a plain env
+ * read) rather than raw indexing — the sanctioned way to read injected
+ * secrets, and it keeps the env type consistent with the rest of the app.
  */
+
+import { secret, type ConnectionsEnv } from "@clawnify/connections";
 
 export interface WordPressCreds {
   siteUrl: string; // e.g. https://myblog.com (no trailing slash)
@@ -30,16 +36,16 @@ export interface WordPressCreds {
 }
 
 /** Resolve the org's self-hosted WordPress credentials (see file header). */
-export function resolveCreds(env: Record<string, string | undefined>): WordPressCreds | null {
-  const siteUrl = (env.WORDPRESS_SITE_URL || "").trim().replace(/\/+$/, "");
-  const username = (env.WORDPRESS_USERNAME || "").trim();
-  const appPassword = (env.WORDPRESS_PASSWORD || "").trim();
+export function resolveCreds(env: ConnectionsEnv): WordPressCreds | null {
+  const siteUrl = (secret("WORDPRESS_SITE_URL", env) || "").trim().replace(/\/+$/, "");
+  const username = (secret("WORDPRESS_USERNAME", env) || "").trim();
+  const appPassword = (secret("WORDPRESS_PASSWORD", env) || "").trim();
   if (!siteUrl || !username || !appPassword) return null;
   return { siteUrl, username, appPassword };
 }
 
 /** Whether a WordPress site is connected (creds present). */
-export function wordpressConnected(env: Record<string, string | undefined>): boolean {
+export function wordpressConnected(env: ConnectionsEnv): boolean {
   return resolveCreds(env) !== null;
 }
 
@@ -65,7 +71,7 @@ export interface PublishResult {
  * relying on WordPress's own `future` scheduling.
  */
 export async function publishArticle(
-  env: Record<string, string | undefined>,
+  env: ConnectionsEnv,
   input: PublishInput,
 ): Promise<PublishResult> {
   const creds = resolveCreds(env);

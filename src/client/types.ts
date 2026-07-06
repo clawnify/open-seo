@@ -42,4 +42,32 @@ export interface Stats {
 export interface AppStatus {
   wordpress_connected: boolean;
   ai: boolean;
+  research_live: boolean;
 }
+
+export type KeywordIntent = "informational" | "commercial" | "transactional" | "navigational";
+export type Difficulty = "Low" | "Medium" | "High";
+export type ResearchSource = "live" | "ai";
+
+export interface KeywordIdea {
+  keyword: string;
+  intent: KeywordIntent;
+  difficulty: Difficulty;
+  angle: string;
+}
+
+export interface KeywordDiscovery {
+  source: ResearchSource;
+  ideas: KeywordIdea[];
+}
+
+export interface Competitor {
+  position: number;
+  domain: string;
+  title: string;
+  url: string;
+}
+
+export type CompetitorResult =
+  | { live: true; seed: string; competitors: Competitor[]; gaps: string[] }
+  | { live: false };

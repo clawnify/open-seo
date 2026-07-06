@@ -9,6 +9,8 @@
  * dashboard preview as-is.
  */
 
+import { secret, type ConnectionsEnv } from "@clawnify/connections";
+
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -45,7 +47,7 @@ Output rules:
 - Structure for search intent: open with a direct answer to the query, then cover subtopics with descriptive headings, and close with a short FAQ (<h2>FAQ</h2> + <h3> questions). Aim for 700-1100 words unless told otherwise.
 - Write naturally for humans; weave the keyword and related entities in without stuffing.`;
 
-export async function generateArticle(env: Record<string, string | undefined>, input: ArticleInput): Promise<Article> {
+export async function generateArticle(env: ConnectionsEnv, input: ArticleInput): Promise<Article> {
   const parts: string[] = [];
   if (input.plan?.name) parts.push(`Content cluster: ${input.plan.name}`);
   if (input.plan?.audience) parts.push(`Target audience: ${input.plan.audience}`);
@@ -72,7 +74,7 @@ Output rules:
 
 /** Expand a cluster/keyword into a set of article title ideas (Produce → Ideas). */
 export async function generateIdeas(
-  env: Record<string, string | undefined>,
+  env: ConnectionsEnv,
   input: { topic: string; audience?: string; count?: number },
 ): Promise<string[]> {
   const count = Math.min(Math.max(input.count ?? 8, 1), 20);
@@ -89,17 +91,101 @@ export async function generateIdeas(
   return titles.filter((t): t is string => typeof t === "string" && t.trim().length > 0).map((t) => t.trim()).slice(0, count);
 }
 
+// ── Research: keyword classification / estimation ────────────────────
+
+export type KeywordIntent = "informational" | "commercial" | "transactional" | "navigational";
+export type Difficulty = "Low" | "Medium" | "High";
+
+export interface KeywordIdea {
+  /** The target search phrase. */
+  keyword: string;
+  intent: KeywordIntent;
+  /** Ranking difficulty band (from ranking-domain strength when grounded). */
+  difficulty: Difficulty;
+  /** One line: why it's an opportunity / what content gap it fills. */
+  angle: string;
+}
+
+export interface ResearchContext {
+  seed: string;
+  audience?: string;
+  /**
+   * Live SERP signals. When present, the model CLUSTERS and prioritizes real
+   * Google data (grounded); when absent, it proposes estimates (clearly the
+   * caller labels these source:"ai").
+   */
+  relatedTerms?: string[]; // related searches + People-Also-Ask questions
+  rankingDomains?: string[]; // page-1 organic domains for the seed
+}
+
+const RESEARCH_SYSTEM = `You are an SEO keyword strategist. From a seed topic (and, when provided, live Google SERP signals) you surface concrete, prioritized keyword opportunities a content team should write about.
+
+Output rules:
+- Respond with ONLY a JSON object, no prose, no code fences.
+- Shape: { "ideas": [{ "keyword": string, "intent": string, "difficulty": string, "angle": string }] }
+- "intent": exactly one of "informational" | "commercial" | "transactional" | "navigational".
+- "difficulty": exactly one of "Low" | "Medium" | "High". When ranking domains are given, infer difficulty from how authoritative/entrenched they are (many strong/branded domains → High). Without them, estimate conservatively.
+- "keyword": a specific, natural search phrase (long-tail preferred). No numbering, no quotes, lowercase unless a proper noun.
+- "angle": <= 90 chars — the opportunity or content gap this keyword captures.
+- Prefer distinct search intents and long-tail specificity over head terms. 10-15 ideas.`;
+
+/**
+ * Turn a seed (+ optional live SERP signals) into classified keyword ideas.
+ * Grounded when relatedTerms/rankingDomains are supplied, estimated otherwise.
+ */
+export async function researchKeywords(
+  env: ConnectionsEnv,
+  ctx: ResearchContext,
+): Promise<KeywordIdea[]> {
+  const grounded = (ctx.relatedTerms?.length ?? 0) > 0;
+  const parts: string[] = [`Seed topic: ${ctx.seed}`];
+  if (ctx.audience) parts.push(`Target audience: ${ctx.audience}`);
+  if (grounded) {
+    parts.push(
+      "",
+      "These are REAL related queries and People-Also-Ask questions from Google's live SERP — cluster and prioritize them (you may add a few tightly-related long-tail variants):",
+      ...ctx.relatedTerms!.slice(0, 40).map((t) => `- ${t}`),
+    );
+    if (ctx.rankingDomains?.length) {
+      parts.push("", `Current page-1 ranking domains for "${ctx.seed}" (judge difficulty from these): ${ctx.rankingDomains.slice(0, 12).join(", ")}`);
+    }
+  } else {
+    parts.push("", "No live SERP data available — propose realistic long-tail keyword opportunities for this seed. These are estimates.");
+  }
+
+  const content = await complete(env, RESEARCH_SYSTEM, parts.join("\n"), { json: true });
+  const parsed = parseJson(content) as { ideas?: unknown };
+  const raw = Array.isArray(parsed.ideas) ? parsed.ideas : [];
+  const intents: KeywordIntent[] = ["informational", "commercial", "transactional", "navigational"];
+  const diffs: Difficulty[] = ["Low", "Medium", "High"];
+  const seen = new Set<string>();
+  const ideas: KeywordIdea[] = [];
+  for (const r of raw) {
+    const o = (r ?? {}) as Record<string, unknown>;
+    const keyword = typeof o.keyword === "string" ? o.keyword.trim() : "";
+    if (!keyword || seen.has(keyword.toLowerCase())) continue;
+    seen.add(keyword.toLowerCase());
+    ideas.push({
+      keyword,
+      intent: intents.includes(o.intent as KeywordIntent) ? (o.intent as KeywordIntent) : "informational",
+      difficulty: diffs.includes(o.difficulty as Difficulty) ? (o.difficulty as Difficulty) : "Medium",
+      angle: typeof o.angle === "string" ? o.angle.trim() : "",
+    });
+  }
+  return ideas.slice(0, 15);
+}
+
 // ── OpenRouter transport ─────────────────────────────────────────────
 
 async function complete(
-  env: Record<string, string | undefined>,
+  env: ConnectionsEnv,
   system: string,
   user: string,
   opts: { json?: boolean } = {},
 ): Promise<string> {
-  const apiKey = env.OPENROUTER_API_KEY;
+  const apiKey = secret("OPENROUTER_API_KEY", env);
   if (!apiKey) throw new Error("AI generation unavailable: OPENROUTER_API_KEY is not set.");
-  const model = env.SEO_MODEL || DEFAULT_MODEL;
+  const model = secret("SEO_MODEL", env) || DEFAULT_MODEL;
 
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "preact/hooks";
 import { api } from "../api";
-import type { Post, Plan, Stats, AppStatus, KeywordDiscovery, CompetitorResult, RankingsResult } from "../types";
+import type { Post, Plan, Stats, AppStatus, KeywordDiscovery, CompetitorResult, RankingsResult, OptimizeResult } from "../types";
 
 export function useAppState() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -81,6 +81,12 @@ export function useAppState() {
     catch (e: any) { setError(e.message); return null; }
   }, [loadPosts]);
 
+  // ── Optimize ──
+  const suggestOptimizations = useCallback(async (postId: number) => {
+    try { return await api<OptimizeResult>("POST", "/api/optimize/suggest", { post_id: postId }); }
+    catch (e: any) { setError(e.message); return null; }
+  }, []);
+
   // ── Post CRUD ──
   const createPost = useCallback(async (data: Partial<Post>) => {
     try { const p = await api<Post>("POST", "/api/posts", data); await loadPosts(); await loadStats(); return p; }
@@ -105,7 +111,7 @@ export function useAppState() {
     loadPosts, loadPlans, loadStats, loadCalendar,
     createPlan, updatePlan, deletePlan,
     generateIdeas, generateArticle,
-    discoverKeywords, researchCompetitors, refreshRankings,
+    discoverKeywords, researchCompetitors, refreshRankings, suggestOptimizations,
     createPost, updatePost, deletePost, publishPost,
   };
 }

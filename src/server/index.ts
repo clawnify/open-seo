@@ -6,6 +6,7 @@ import { generateArticle, generateIdeas, type PlanContext } from "./ai";
 import { publishArticle, wordpressConnected } from "./wordpress";
 import { researchConnected, discoverKeywords, researchCompetitors } from "./research";
 import { refreshRankings } from "./measure";
+import { suggestImprovements } from "./optimize";
 
 type Env = {
   Bindings: {
@@ -144,6 +145,22 @@ app.post("/api/measure/rankings/refresh", async (c) => {
     return c.json(await refreshRankings(c.env));
   } catch (e: any) {
     return c.json({ error: e.message || "Rank check failed" }, 502);
+  }
+});
+
+// ── Optimize: data-driven rewrite suggestions ──
+
+// One article → apply-able improvements grounded in the live SERP (AI-only
+// fallback). The client applies accepted suggestions via /api/posts/:id.
+app.post("/api/optimize/suggest", async (c) => {
+  const { post_id } = await c.req.json<{ post_id: number }>();
+  if (!post_id) return c.json({ error: "post_id required" }, 400);
+  try {
+    const result = await suggestImprovements(c.env, post_id);
+    if (!result) return c.json({ error: "Article not found" }, 404);
+    return c.json(result);
+  } catch (e: any) {
+    return c.json({ error: e.message || "Optimization failed" }, 502);
   }
 });
 

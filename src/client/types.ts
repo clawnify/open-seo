@@ -35,6 +35,18 @@ export type RankingsResult =
   | { live: false }
   | { live: true; domain: string | null; checked: number; unchecked: number };
 
+export interface OptimizeSuggestion {
+  type: "meta" | "section";
+  label: string;
+  why: string;
+  value: string;
+}
+
+export interface OptimizeResult {
+  source: ResearchSource;
+  suggestions: OptimizeSuggestion[];
+}
+
 export interface Stats {
   total: number;
   drafts: number;

@@ -175,6 +175,73 @@ export async function researchKeywords(
   return ideas.slice(0, 15);
 }
 
+// ── Optimize: data-driven rewrite suggestions ────────────────────────
+
+/** A concrete, deterministically-applicable improvement to an article. */
+export interface OptimizeSuggestion {
+  /** "meta" replaces the meta description; "section" appends an HTML block. */
+  type: "meta" | "section";
+  label: string; // short imperative title
+  why: string; // the SERP-grounded rationale
+  /** Plain text (meta) or clean semantic HTML block (section) to apply. */
+  value: string;
+}
+
+export interface OptimizeContext {
+  keyword: string;
+  title: string;
+  contentHtml: string;
+  currentMeta?: string;
+  /** Live SERP signals (present → grounded suggestions). */
+  relatedTerms?: string[]; // related searches + People-Also-Ask
+  competitorDomains?: string[]; // page-1 domains for the keyword
+}
+
+const OPTIMIZE_SYSTEM = `You are an SEO editor. Given an existing article (target keyword, title, current HTML body, current meta description) and — when provided — live Google SERP signals, propose concrete, high-impact improvements to help it rank and get cited by AI answer engines.
+
+Output rules:
+- Respond with ONLY a JSON object, no prose, no code fences.
+- Shape: { "suggestions": [{ "type": string, "label": string, "why": string, "value": string }] }
+- "type": exactly "meta" OR "section".
+  - "meta": an improved meta description. "value" = plain text <= 155 chars including the keyword and a clear value proposition. Only suggest this if the current meta is missing, too long, or weak.
+  - "section": a NEW section or FAQ the article is MISSING and searchers clearly want. "value" = clean semantic HTML for that block only — an <h2> or <h3> heading + <p>/<ul>/<ol>. No <h1>, no <html>/<head>/<body> wrappers, no inline styles or scripts.
+- "label": short imperative, <= 70 chars (e.g. "Add an FAQ answering 'is wordpress seo hard?'").
+- "why": <= 120 chars — tie to a concrete gap (a People-Also-Ask question the article doesn't answer, thin coverage vs the ranking competitors, or a weak/missing meta).
+- Ground "section" suggestions in the provided related searches / PAA questions when available; do not invent search demand. 4-8 suggestions, each genuinely additive (do not restate content already present).`;
+
+/** Propose apply-able improvements for one article (grounded when SERP given). */
+export async function suggestOptimizations(
+  env: ConnectionsEnv,
+  ctx: OptimizeContext,
+): Promise<OptimizeSuggestion[]> {
+  const parts: string[] = [
+    `Target keyword: ${ctx.keyword}`,
+    `Title: ${ctx.title}`,
+    `Current meta description: ${ctx.currentMeta || "(none)"}`,
+  ];
+  if (ctx.relatedTerms?.length) {
+    parts.push("", "Live related searches + People-Also-Ask questions from Google (ground content-gap suggestions in these):", ...ctx.relatedTerms.slice(0, 30).map((t) => `- ${t}`));
+  }
+  if (ctx.competitorDomains?.length) {
+    parts.push("", `Page-1 ranking competitors: ${ctx.competitorDomains.slice(0, 10).join(", ")}`);
+  }
+  parts.push("", "Current article HTML:", ctx.contentHtml.slice(0, 12000));
+
+  const content = await complete(env, OPTIMIZE_SYSTEM, parts.join("\n"), { json: true });
+  const parsed = parseJson(content) as { suggestions?: unknown };
+  const raw = Array.isArray(parsed.suggestions) ? parsed.suggestions : [];
+  const out: OptimizeSuggestion[] = [];
+  for (const r of raw) {
+    const o = (r ?? {}) as Record<string, unknown>;
+    const type = o.type === "meta" || o.type === "section" ? o.type : null;
+    const value = typeof o.value === "string" ? o.value.trim() : "";
+    const label = typeof o.label === "string" ? o.label.trim() : "";
+    if (!type || !value || !label) continue;
+    out.push({ type, label, why: typeof o.why === "string" ? o.why.trim() : "", value });
+  }
+  return out.slice(0, 8);
+}
+
 // ── OpenRouter transport ─────────────────────────────────────────────
 
 async function complete(

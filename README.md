@@ -29,7 +29,10 @@ Think of it as an open-source alternative to **Surfer** or **Frase** — a conte
 - **Pipeline stats + publishing cadence** — at-a-glance counts and a 30-day activity chart.
 - **Keyword rankings** — check where your connected site currently ranks on Google for each published article's keyword, from **live SerpAPI results**. Positions are stored per article (top-3 / page-1 badges, best position, last checked) and refreshed on demand in bounded batches.
 
-> **Roadmap:** Optimize (AI rewrite suggestions over search performance); Google Search Console clicks/impressions/CTR; and real search-volume/difficulty numbers via DataForSEO to enrich the AI-classified difficulty bands.
+**Optimize**
+- **Data-driven rewrite suggestions** — pick an article and get concrete, apply-able improvements grounded in the **live SERP** for its keyword: a sharper meta description, or a new section/FAQ answering a real People-Also-Ask question the article misses. **Accept** applies the change to the draft (set meta / append section); **dismiss** discards it. Re-publish to push the improved article live.
+
+> **Roadmap:** Google Search Console clicks/impressions/CTR; and real search-volume/difficulty numbers via DataForSEO to enrich the AI-classified difficulty bands.
 
 ## How publishing works
 
@@ -44,6 +47,8 @@ Live search data comes from the **SerpAPI integration you connect in Clawnify �
 Without a SerpAPI connection (e.g. local `pnpm dev`), keyword discovery degrades to an AI-estimated expansion (`source: "ai"`, clearly labelled — never invented numbers presented as live data); competitor analysis stays live-only.
 
 The same connection powers **Measure's keyword rankings**: for each published article, `src/server/measure.ts` runs a live search for its keyword and records where your site's domain (from `WORDPRESS_SITE_URL`) sits in the page-1 results. Ranks are persisted on each post, so the dashboard reads stored positions instead of re-hitting the API on every view; checks run in bounded batches (least-recently-checked first) to respect Worker time and SerpAPI rate limits.
+
+**Optimize** (`src/server/optimize.ts`) reuses it once more: it pulls the live SERP for an article's keyword and feeds the real competitors + People-Also-Ask questions, alongside the article's current HTML, to the model — so every suggestion is a deterministic, apply-able edit (replace the meta, or append a missing section) grounded in what actually ranks. Without SerpAPI, suggestions are AI-only.
 
 ## Quickstart
 
@@ -91,6 +96,7 @@ src/
     ai.ts           -- OpenRouter: article + idea generation + keyword classification
     research.ts     -- Keyword/competitor discovery seam (SerpAPI live + AI fallback)
     measure.ts      -- Live keyword rank tracking (reuses the SerpAPI seam)
+    optimize.ts     -- SERP-grounded rewrite suggestions (reuses SerpAPI + OpenRouter)
     wordpress.ts    -- WordPress publish seam (credentials + REST)
     queue.ts        -- Clawnify managed-queue scheduling adapter
     db.ts           -- D1 adapter (@clawnify/db)
@@ -109,6 +115,7 @@ src/
 | POST | `/api/research/keywords` | Seed → keyword ideas (`source: live \| ai`) |
 | POST | `/api/research/competitors` | Seed → live ranking competitors + content gaps |
 | POST | `/api/measure/rankings/refresh` | Check + persist live Google positions (bounded batch) |
+| POST | `/api/optimize/suggest` | Article → apply-able, SERP-grounded improvements |
 | GET/POST/PUT/DELETE | `/api/plans[/:id]` | Content plan CRUD |
 | POST | `/api/ideas` | Article title ideas for a cluster |
 | POST | `/api/generate` | Generate a full article draft |

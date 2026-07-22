@@ -1,6 +1,6 @@
-import { Hono } from "hono";
+import { createApp } from "@clawnify/app";
 import type { CredentialBinding } from "@clawnify/connections";
-import { initDB, query, get, run } from "./db";
+import { query, get, run } from "./db";
 import { scheduleDelivery, cancelDelivery, verifyDelivery } from "./queue";
 import { generateArticle, generateIdeas, type PlanContext } from "./ai";
 import { publishArticle, wordpressConnected } from "./wordpress";
@@ -93,11 +93,10 @@ async function planContext(planId: number | null | undefined): Promise<PlanConte
   return { name: p.name, keyword: p.keyword, audience: p.audience, notes: p.notes };
 }
 
-const app = new Hono<Env>();
-
-app.use("*", async (c, next) => {
-  initDB(c.env);
-  await next();
+const app = createApp<Env>({
+  title: "Open SEO",
+  version: "1.0.0",
+  description: "SEO content engine — keyword research, article production, scheduling, and WordPress publishing.",
 });
 
 // ── Status ──
